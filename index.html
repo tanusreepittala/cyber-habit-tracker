@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CYBER-HABIT // Quest Tracker HUD</title>
+  
+  <!-- Google Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Canvas Confetti Library -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <!-- External Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Background Scanlines FX -->
+  <div class="scanlines" id="scanlines"></div>
+
+  <div class="cyber-container">
+
+    <!-- TOP NAV / CONTROLS -->
+    <header class="cyber-header">
+      <div class="brand">
+        <i class="fa-solid fa-terminal brand-icon"></i>
+        <h1>CYBER<span class="text-neon-pink">HABIT</span> <span class="version-tag">v2.0</span></h1>
+      </div>
+      <div class="header-actions">
+        <button id="scanlineToggleBtn" class="cyber-btn sm" title="Toggle CRT Effects">
+          <i class="fa-solid fa-tv"></i> Scanlines
+        </button>
+        <button id="audioToggleBtn" class="cyber-btn sm" title="Toggle Audio FX">
+          <i class="fa-solid fa-volume-high"></i> Audio: ON
+        </button>
+      </div>
+    </header>
+
+    <!-- PLAYER STATS HUD -->
+    <section class="hud-card profile-card">
+      <div class="profile-main">
+        <div class="avatar-box">
+          <div class="avatar-ring"></div>
+          <i class="fa-solid fa-user-ninja avatar-icon"></i>
+          <span class="level-badge" id="playerLevel">LVL 1</span>
+        </div>
+        <div class="player-info">
+          <div class="player-title-row">
+            <h2 id="playerRankTitle">CYBER NOVICE</h2>
+            <span class="streak-pill" title="Current Daily Streak">
+              <i class="fa-solid fa-fire text-neon-yellow"></i> 
+              <span id="streakDays">0</span> DAY STREAK
+            </span>
+          </div>
+          <div class="xp-bar-container">
+            <div class="xp-bar-labels">
+              <span>EXP: <span id="currentXpText">0</span> / <span id="nextLevelXpText">100</span></span>
+              <span id="xpPercentText">0%</span>
+            </div>
+            <div class="xp-progress-track">
+              <div class="xp-progress-fill" id="xpProgressFill" style="width: 0%;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MAIN GRID CONTAINER -->
+    <div class="cyber-grid">
+      
+      <!-- LEFT COLUMN: QUEST / HABIT LIST -->
+      <main class="hud-card quest-panel">
+        <div class="panel-header">
+          <h3><i class="fa-solid fa-crosshairs text-neon-cyan"></i> ACTIVE PROTOCOLS (HABITS)</h3>
+          <button id="openModalBtn" class="cyber-btn primary sm">
+            <i class="fa-solid fa-plus"></i> NEW PROTOCOL
+          </button>
+        </div>
+
+        <div class="habit-list" id="habitList">
+          <!-- Habit items dynamically loaded here -->
+        </div>
+
+        <div class="empty-state hidden" id="emptyState">
+          <i class="fa-solid fa-ghost"></i>
+          <p>NO ACTIVE PROTOCOLS FOUND.</p>
+          <small>Click "+ NEW PROTOCOL" to set up your daily matrix.</small>
+        </div>
+      </main>
+
+      <!-- RIGHT COLUMN: ANALYTICS HUD -->
+      <aside class="hud-card analytics-panel">
+        <h3><i class="fa-solid fa-chart-network text-neon-pink"></i> MATRIX ANALYTICS</h3>
+        
+        <!-- Daily Progress Radial Stats -->
+        <div class="stat-card">
+          <div class="stat-header">
+            <span>DAILY COMPLETION</span>
+            <span id="dailyPercentText" class="text-neon-cyan font-bold">0%</span>
+          </div>
+          <div class="progress-bar-linear">
+            <div id="dailyProgressBar" class="progress-fill-cyan" style="width: 0%;"></div>
+          </div>
+        </div>
+
+        <!-- Metric Cards Grid -->
+        <div class="metrics-grid">
+          <div class="mini-stat-box">
+            <span class="mini-label">TOTAL COMPLETED</span>
+            <span class="mini-value text-neon-yellow" id="statTotalCompleted">0</span>
+          </div>
+          <div class="mini-stat-box">
+            <span class="mini-label">LIFETIME XP</span>
+            <span class="mini-value text-neon-purple" id="statLifetimeXp">0</span>
+          </div>
+        </div>
+
+        <!-- 7-Day Matrix Activity Log -->
+        <div class="weekly-log-container">
+          <div class="stat-header">
+            <span>7-DAY PROTOCOL HISTORY</span>
+          </div>
+          <div class="matrix-grid" id="matrixGrid">
+            <!-- Dynamically populated 7 days status -->
+          </div>
+        </div>
+      </aside>
+
+    </div>
+  </div>
+
+  <!-- ADD HABIT MODAL -->
+  <div class="modal-backdrop hidden" id="habitModal">
+    <div class="modal-window hud-card">
+      <div class="modal-header">
+        <h4><i class="fa-solid fa-microchip text-neon-cyan"></i> INITIALIZE NEW HABIT</h4>
+        <button id="closeModalBtn" class="close-btn">&times;</button>
+      </div>
+      <form id="addHabitForm">
+        <div class="form-group">
+          <label for="habitName">PROTOCOL NAME</label>
+          <input type="text" id="habitName" required placeholder="e.g. Read 20 Pages of Tech Docs" autocomplete="off">
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="habitCategory">CATEGORY</label>
+            <select id="habitCategory">
+              <option value="code">💻 Coding & Tech</option>
+              <option value="fitness">⚡ Fitness & Health</option>
+              <option value="mind">🧠 Learning & Focus</option>
+              <option value="finance">💎 Finance & Money</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="habitDifficulty">DIFFICULTY (XP)</label>
+            <select id="habitDifficulty">
+              <option value="15">Easy (+15 XP)</option>
+              <option value="25" selected>Medium (+25 XP)</option>
+              <option value="40">Hard (+40 XP)</option>
+              <option value="60">Epic (+60 XP)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" id="cancelModalBtn" class="cyber-btn default">CANCEL</button>
+          <button type="submit" class="cyber-btn primary">DEPLOY PROTOCOL</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- LEVEL UP ANNOUNCEMENT OVERLAY -->
+  <div class="level-up-overlay hidden" id="levelUpOverlay">
+    <div class="level-up-content">
+      <h1 class="glitch-text" data-text="SYSTEM UPGRADE!">SYSTEM UPGRADE!</h1>
+      <p class="level-up-subtitle">YOU REACHED <span id="newLevelTitle" class="text-neon-pink">LEVEL 2</span></p>
+      <div class="level-up-rank" id="newRankBadge">CYBER DECKER</div>
+      <button id="closeLevelUpBtn" class="cyber-btn primary lg">ACKNOWLEDGE</button>
+    </div>
+  </div>
+
+  <!-- Application Logic -->
+  <script src="app.js"></script>
+</body>
+</html>
